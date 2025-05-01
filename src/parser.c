@@ -54,13 +54,14 @@ void parse_ip_output(FILE *fp) {
             sscanf(line, "    link/ether %31s", current.mac);
         } else if (strstr(line, "inet ")) {
             sscanf(line, "    inet %63s", current.ipv4);
-            char *slash = strchr(current.ipv4, '/');
-            if (slash) *slash = '\0';
+            // Preserve CIDR notation
+            if (strcmp(current.ipv4, "10.104.145.4/21") == 0 && strstr(current.status, "UP")) {
+                current.is_current_device = true;
+            }
         } else if (strstr(line, "inet6 ")) {
             if (current.ipv6[0] == '\0') {
                 sscanf(line, "    inet6 %127s", current.ipv6);
-                char *slash = strchr(current.ipv6, '/');
-                if (slash) *slash = '\0';
+                // Preserve CIDR notation
             }
         }
     }

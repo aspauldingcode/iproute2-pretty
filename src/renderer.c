@@ -8,6 +8,7 @@
 
 #define COLOR_RESET "\033[0m"
 #define COLOR_BOLD_GREEN "\033[1;32m"
+#define COLOR_HIGHLIGHT "\033[1;31m" // Red color for base08
 
 static void print_border(int widths[], int n, const char* left, const char* mid, const char* right, const char* fill) {
     printf("%s", left);
@@ -19,23 +20,21 @@ static void print_border(int widths[], int n, const char* left, const char* mid,
     putchar('\n');
 }
 
-static void print_row(char *cells[], int widths[], int n, bool bold) {
+static void print_row(char *cells[], int widths[], int n, bool bold, bool highlight) {
     printf("│");
     for (int i = 0; i < n; ++i) {
         if (i == 0) { // For the numbers column
-            // Apply bold and base0B color (green)
-            printf("\033[1;32m");
+            printf("\033[1;32m"); // Apply bold and base0B color (green)
+        } else if (highlight) {
+            printf(COLOR_HIGHLIGHT); // Apply highlight color
         } else if (bold) {
-            // For other columns with bold style
-            printf("\033[1;32m");
+            printf("\033[1;32m"); // For other columns with bold style
         }
         
         printf(" %-*s ", widths[i], cells[i]);
         
-        if (i == 0) {
-            printf("\033[0m"); // Reset color for the numbers column
-        } else if (bold) {
-            printf("\033[0m"); // Reset bold for other columns
+        if (i == 0 || highlight || bold) {
+            printf(COLOR_RESET); // Reset color
         }
         
         printf("│");
@@ -71,7 +70,7 @@ void render_table(void) {
 
     // Header row
     char *headers[] = {"#", "Name", "MAC", "IPv4", "IPv6", "Status", "MTU"};
-    print_row(headers, widths, cols, true);
+    print_row(headers, widths, cols, true, false);
 
     // Mid border
     print_border(widths, cols, "├", "┼", "┤", "─");
@@ -89,12 +88,12 @@ void render_table(void) {
             idx,
             interfaces[i].name,
             interfaces[i].mac[0] ? interfaces[i].mac : "-",
-            interfaces[i].ipv4[0] ? interfaces[i].ipv4 : "-",
-            interfaces[i].ipv6[0] ? interfaces[i].ipv6 : "-",
+            interfaces[i].ipv4[0] ? interfaces[i].ipv4 : "-", // Ensure CIDR is included
+            interfaces[i].ipv6[0] ? interfaces[i].ipv6 : "-", // Ensure CIDR is included
             interfaces[i].status[0] ? interfaces[i].status : "-",
             mtu_str
         };
-        print_row(cells, widths, cols, false);
+        print_row(cells, widths, cols, false, interfaces[i].is_current_device);
     }
 
     // Bottom border
@@ -102,6 +101,6 @@ void render_table(void) {
 
     // Footer row (if needed)
     if (iface_count >= 24) {
-        print_row(headers, widths, cols, true);
+        print_row(headers, widths, cols, true, false);
     }
 }
