@@ -15,6 +15,8 @@ typedef struct {
     char mac[32];
     char ipv4[64];
     char ipv6[128];
+    char status[64];  // To store the interface status (UP, DOWN, etc.)
+    int mtu;          // To store the MTU value
 } Interface;
 
 Interface interfaces[MAX_INTERFACES];
@@ -43,6 +45,7 @@ void parse_ip_output(FILE *fp) {
             }
             iface_open = true;
 
+            // Extract interface name
             char *name_start = strchr(line, ':');
             if (name_start && *(name_start + 1) == ' ') {
                 name_start += 2;
@@ -52,6 +55,23 @@ void parse_ip_output(FILE *fp) {
                     strncpy(current.name, name_start, len);
                     current.name[len] = '\0';
                 }
+            }
+
+            // Extract status (e.g., UP, DOWN, etc.)
+            char *status_start = strchr(line, '<');
+            if (status_start) {
+                char *status_end = strchr(status_start, '>');
+                if (status_end) {
+                    size_t len = status_end - status_start - 1;
+                    strncpy(current.status, status_start + 1, len);
+                    current.status[len] = '\0';
+                }
+            }
+
+            // Extract MTU (if present)
+            char *mtu_start = strstr(line, "mtu ");
+            if (mtu_start) {
+                sscanf(mtu_start, "mtu %d", &current.mtu);
             }
         } else if (strstr(line, "link/ether")) {
             sscanf(line, "    link/ether %31s", current.mac);
@@ -108,7 +128,7 @@ void print_row(char *cells[], int widths[], int n, bool bold) {
 }
 
 void render_table() {
-    int width_num = 2, width_name = 4, width_mac = 3, width_ipv4 = 4, width_ipv6 = 4;
+    int width_num = 2, width_name = 4, width_mac = 3, width_ipv4 = 4, width_ipv6 = 4, width_status = 5, width_mtu = 4;
 
     for (int i = 0; i < iface_count; ++i) {
         char idx[4];
@@ -118,17 +138,23 @@ void render_table() {
         width_mac  = max(width_mac, (int)strlen(interfaces[i].mac));
         width_ipv4 = max(width_ipv4, (int)strlen(interfaces[i].ipv4));
         width_ipv6 = max(width_ipv6, (int)strlen(interfaces[i].ipv6));
+        width_status = max(width_status, (int)strlen(interfaces[i].status));
+
+        // Use snprintf to format mtu as a string and calculate its length
+        char mtu_str[16];  // Large enough to hold the mtu value as a string
+        snprintf(mtu_str, sizeof(mtu_str), "%d", interfaces[i].mtu);
+        width_mtu = max(width_mtu, (int)strlen(mtu_str));
     }
 
     // Calculate the column widths dynamically
-    int widths[] = {width_num, width_name, width_mac, width_ipv4, width_ipv6};
+    int widths[] = {width_num, width_name, width_mac, width_ipv4, width_ipv6, width_status, width_mtu};
     const int cols = sizeof(widths) / sizeof(widths[0]);
 
     // Top border
     print_border(widths, cols, "╭", "┬", "╮", "─");
 
     // Header row
-    char *headers[] = {"#", "Name", "MAC", "IPv4", "IPv6"};
+    char *headers[] = {"#", "Name", "MAC", "IPv4", "IPv6", "Status", "MTU"};
     print_row(headers, widths, cols, true);
 
     // Mid border
@@ -138,12 +164,19 @@ void render_table() {
     for (int i = 0; i < iface_count; ++i) {
         char idx[4];
         snprintf(idx, sizeof(idx), "%d", i);
+        
+        // Use snprintf to convert mtu to a string for display
+        char mtu_str[16];
+        snprintf(mtu_str, sizeof(mtu_str), "%d", interfaces[i].mtu);
+
         char *cells[] = {
             idx,
             interfaces[i].name,
             interfaces[i].mac[0] ? interfaces[i].mac : "-",
             interfaces[i].ipv4[0] ? interfaces[i].ipv4 : "-",
-            interfaces[i].ipv6[0] ? interfaces[i].ipv6 : "-"
+            interfaces[i].ipv6[0] ? interfaces[i].ipv6 : "-",
+            interfaces[i].status[0] ? interfaces[i].status : "-",
+            mtu_str
         };
         print_row(cells, widths, cols, false);
     }
