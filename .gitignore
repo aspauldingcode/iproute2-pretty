@@ -1,0 +1,16 @@
+# Build artifacts
+bin/
+obj/
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*~
+
+# OS specific files
+.DS_Store
+.ccls-cache/
+
+# Executable
+ip_a_pretty
