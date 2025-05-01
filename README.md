@@ -1,5 +1,7 @@
 # iproute2-pretty
 
+![Preview](./preview.png)
+
 A command-line utility that provides a more readable and user-friendly output for the `ip a` command from the iproute2 package.
 
 ## Overview
