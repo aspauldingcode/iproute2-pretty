@@ -50,8 +50,8 @@ void parse_ip_output(FILE *fp) {
             if (mtu_start) {
                 sscanf(mtu_start, "mtu %d", &current.mtu);
             }
-        } else if (strstr(line, "link/")) {
-            sscanf(line, "    link/%31s", current.link);
+        } else if (strstr(line, "link/ether")) {
+            sscanf(line, "    link/ether %31s", current.mac);
         } else if (strstr(line, "inet ")) {
             sscanf(line, "    inet %63s", current.ipv4);
             // Preserve CIDR notation
