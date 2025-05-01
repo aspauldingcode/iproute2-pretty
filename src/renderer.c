@@ -43,7 +43,7 @@ static void print_row(char *cells[], int widths[], int n, bool bold, bool highli
 }
 
 void render_table(void) {
-    int width_num = 2, width_name = 4, width_mac = 3, width_ipv4 = 4, width_ipv6 = 4, width_status = 5, width_mtu = 4;
+    int width_num = 2, width_name = 4, width_mac = 3, width_ipv4 = 4, width_ipv6 = 4, width_status = 5, width_link = 5, width_mtu = 4;
 
     for (int i = 0; i < iface_count; ++i) {
         char idx[4];
@@ -54,6 +54,7 @@ void render_table(void) {
         width_ipv4 = max(width_ipv4, (int)strlen(interfaces[i].ipv4));
         width_ipv6 = max(width_ipv6, (int)strlen(interfaces[i].ipv6));
         width_status = max(width_status, (int)strlen(interfaces[i].status));
+        width_link = max(width_link, (int)strlen(interfaces[i].link));
 
         // Use snprintf to format mtu as a string and calculate its length
         char mtu_str[16];  // Large enough to hold the mtu value as a string
@@ -62,14 +63,14 @@ void render_table(void) {
     }
 
     // Calculate the column widths dynamically
-    int widths[] = {width_num, width_name, width_mac, width_ipv4, width_ipv6, width_status, width_mtu};
+    int widths[] = {width_num, width_name, width_mac, width_ipv4, width_ipv6, width_status, width_link, width_mtu};
     const int cols = sizeof(widths) / sizeof(widths[0]);
 
     // Top border
     print_border(widths, cols, "╭", "┬", "╮", "─");
 
     // Header row
-    char *headers[] = {"#", "Name", "MAC", "IPv4", "IPv6", "Status", "MTU"};
+    char *headers[] = {"#", "Name", "MAC", "IPv4", "IPv6", "Status", "Link", "MTU"};
     print_row(headers, widths, cols, true, false);
 
     // Mid border
@@ -91,6 +92,7 @@ void render_table(void) {
             interfaces[i].ipv4[0] ? interfaces[i].ipv4 : "-", // Ensure CIDR is included
             interfaces[i].ipv6[0] ? interfaces[i].ipv6 : "-", // Ensure CIDR is included
             interfaces[i].status[0] ? interfaces[i].status : "-",
+            interfaces[i].link[0] ? interfaces[i].link : "-",
             mtu_str
         };
         print_row(cells, widths, cols, false, interfaces[i].is_current_device);

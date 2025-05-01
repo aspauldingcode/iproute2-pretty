@@ -2,7 +2,7 @@
 #define INTERFACE_H
 
 #include <stdio.h>
-#include <stdbool.h> // Add this line
+#include <stdbool.h>
 
 #define MAX_INTERFACES 256
 
@@ -12,8 +12,9 @@ typedef struct {
     char ipv4[64];
     char ipv6[128];
     char status[64];
+    char link[32]; // New field for link type
     int mtu;
-    bool is_current_device; // Add this line
+    bool is_current_device;
 } Interface;
 
 extern Interface interfaces[MAX_INTERFACES];
